@@ -187,7 +187,6 @@ textarea{resize:vertical;min-height:56px}select option{background:var(--bg2)}
     <div class="tabs">
       <button class="tab on" onclick="tab('dash')">📊 Dashboard</button>
       <button class="tab" onclick="tab('fin')">💰 Financeiro</button>
-      <button class="tab" onclick="tab('tasks')">✅ Tarefas</button>
       <button class="tab" onclick="tab('lanc')">📋 Lançamentos</button>
       <button class="tab" onclick="tab('rel')">📄 Relatório</button>
     </div>
@@ -359,7 +358,7 @@ function tab(id){
   document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('on');});
   document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on');});
   document.getElementById('p-'+id).classList.add('on');
-  var ids=['dash','fin','tasks','lanc','rel'];
+  var ids=['dash','fin','lanc','rel'];
   document.querySelectorAll('.tab')[ids.indexOf(id)].classList.add('on');
   if(id==='dash')renderDash();
 }
