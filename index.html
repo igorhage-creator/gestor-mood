@@ -161,6 +161,7 @@ textarea{resize:vertical;min-height:56px}select option{background:var(--bg2)}
     <div class="row"><div class="col"><label>Tipo</label><select id="el-tipo"><option value="a-receber">A Receber</option><option value="a-pagar">A Pagar</option></select></div><div class="col" style="max-width:130px"><label>Valor (R$)</label><input type="number" id="el-val" step="0.01"></div></div>
     <div class="row"><div class="col"><label>Descrição</label><input type="text" id="el-desc"></div></div>
     <div class="row"><div class="col"><label>Vencimento</label><input type="date" id="el-venc"></div><div class="col"><label>Notas</label><input type="text" id="el-nota"></div></div>
+    <div class="row"><div class="col"><label>🔗 Link da NF (Google Drive)</label><input type="url" id="el-nf" placeholder="Cole aqui o link do Drive..."></div></div>
     <div style="margin:10px 0 8px;display:flex;align-items:center;gap:8px">
       <input type="checkbox" id="el-rec" onchange="togRecEdit()" style="width:auto;margin:0;accent-color:var(--accent)">
       <label for="el-rec" style="font-size:13px;cursor:pointer;font-weight:500;color:var(--text2)">🔁 Recorrente</label>
@@ -476,7 +477,7 @@ function addLanc(){
 }
 function editarLanc(id){
   var l=D.la.find(function(x){return x.id===id;});if(!l)return;
-  document.getElementById('el-id').value=id;document.getElementById('el-tipo').value=l.tipo;document.getElementById('el-desc').value=l.desc;document.getElementById('el-val').value=l.valor;document.getElementById('el-venc').value=l.vencimento||'';document.getElementById('el-nota').value=l.nota||'';
+  document.getElementById('el-id').value=id;document.getElementById('el-tipo').value=l.tipo;document.getElementById('el-desc').value=l.desc;document.getElementById('el-val').value=l.valor;document.getElementById('el-venc').value=l.vencimento||'';document.getElementById('el-nota').value=l.nota||'';document.getElementById('el-nf').value=l.nfLink||'';
   var isRec=l.recorrente||false;document.getElementById('el-rec').checked=isRec;document.getElementById('el-rec-box').classList.toggle('on',isRec);document.getElementById('el-freq').value=l.freq||'mensal';document.getElementById('el-dfim').value=l.dataFinal||'';document.getElementById('el-tp').value=l.totalParcelas?l.totalParcelas+' parcelas':'';
   document.getElementById('modal-lanc').classList.add('on');
 }
