@@ -149,6 +149,7 @@ textarea{resize:vertical;min-height:56px}select option{background:var(--bg2)}
     <div class="row"><div class="col"><label>Tipo</label><select id="et-tipo"><option value="receita">Receita</option><option value="despesa">Despesa</option></select></div><div class="col" style="max-width:130px"><label>Valor (R$)</label><input type="number" id="et-val" step="0.01"></div></div>
     <div class="row"><div class="col"><label>Descrição</label><input type="text" id="et-desc"></div></div>
     <div class="row"><div class="col"><label>Categoria</label><input type="text" id="et-cat"></div><div class="col" style="max-width:140px"><label>Data</label><input type="date" id="et-data"></div></div>
+    <div class="row"><div class="col"><label>🔗 Link da NF (Google Drive)</label><input type="url" id="et-nf" placeholder="Cole aqui o link do Drive..."></div></div>
     <div class="modal-btns"><button class="btn" onclick="fecharModal('modal-trans')">Cancelar</button><button class="btn p" onclick="salvarTrans()">Salvar</button></div>
   </div>
 </div>
@@ -248,6 +249,7 @@ textarea{resize:vertical;min-height:56px}select option{background:var(--bg2)}
         <div class="row"><div class="col"><label>Descrição</label><input type="text" id="l-desc" placeholder="Ex: Aluguel, Mensalidade..."></div></div>
         <div class="row"><div class="col"><label>Tipo</label><select id="l-tipo"><option value="a-receber">A Receber</option><option value="a-pagar">A Pagar</option></select></div><div class="col" style="max-width:140px"><label>Valor (R$)</label><input type="number" id="l-val" step="0.01"></div><div class="col" style="max-width:160px"><label>1º Vencimento</label><input type="date" id="l-venc"></div></div>
         <div class="row"><div class="col"><label>Notas</label><textarea id="l-nota" style="min-height:44px"></textarea></div></div>
+        <div class="row"><div class="col"><label>🔗 Link da NF (Google Drive)</label><input type="url" id="l-nf" placeholder="Cole aqui o link do Drive..."></div></div>
         <div style="margin:10px 0 8px;display:flex;align-items:center;gap:8px">
           <input type="checkbox" id="l-rec" onchange="togRec()" style="width:auto;margin:0;accent-color:var(--accent)">
           <label for="l-rec" style="font-size:13px;cursor:pointer;font-weight:500;color:var(--text2)">🔁 Lançamento recorrente</label>
@@ -410,12 +412,12 @@ function addTrans(){
 }
 function editarTrans(id){
   var t=D.tr.find(function(x){return x.id===id;});if(!t)return;
-  document.getElementById('et-id').value=id;document.getElementById('et-tipo').value=t.tipo;document.getElementById('et-desc').value=t.desc;document.getElementById('et-val').value=t.valor;document.getElementById('et-cat').value=t.categoria||'';document.getElementById('et-data').value=t.data||'';
+  document.getElementById('et-id').value=id;document.getElementById('et-tipo').value=t.tipo;document.getElementById('et-desc').value=t.desc;document.getElementById('et-val').value=t.valor;document.getElementById('et-cat').value=t.categoria||'';document.getElementById('et-data').value=t.data||'';document.getElementById('et-nf').value=t.nfLink||'';
   document.getElementById('modal-trans').classList.add('on');
 }
 function salvarTrans(){
   var id=document.getElementById('et-id').value;
-  var upd={tipo:document.getElementById('et-tipo').value,desc:document.getElementById('et-desc').value.trim(),valor:parseFloat(document.getElementById('et-val').value),categoria:document.getElementById('et-cat').value.trim(),data:document.getElementById('et-data').value};
+  var upd={tipo:document.getElementById('et-tipo').value,desc:document.getElementById('et-desc').value.trim(),valor:parseFloat(document.getElementById('et-val').value),categoria:document.getElementById('et-cat').value.trim(),data:document.getElementById('et-data').value,nfLink:document.getElementById('et-nf').value.trim()};
   if(!upd.desc||isNaN(upd.valor)){alert('Preencha todos os campos.');return;}
   db.collection('transacoes').doc(id).update(upd).then(function(){var t=D.tr.find(function(x){return x.id===id;});if(t)Object.assign(t,upd);fecharModal('modal-trans');toast('✅ Atualizado!');renderFin();});
 }
@@ -432,7 +434,9 @@ function renderExtrato(){
   list.sort(function(a,b){return ord==='asc'?(a.data||'').localeCompare(b.data||''):(b.data||'').localeCompare(a.data||'');});
   if(!list.length){document.getElementById('ext-body').innerHTML='<div class="empty">Nenhuma transação.</div>';return;}
   document.getElementById('ext-body').innerHTML='<table><tr><th>Data</th><th>Descrição</th><th>Tipo</th><th style="text-align:right">Valor</th><th></th></tr>'+
-    list.map(function(t){return '<tr><td style="color:var(--text3);font-size:12px">'+fd(t.data)+'</td><td style="font-weight:500">'+t.desc+(t.categoria?'<br><span style="font-size:11px;color:var(--text3)">'+t.categoria+'</span>':'')+'</td><td><span class="bx '+t.tipo+'">'+t.tipo+'</span></td><td style="text-align:right;font-weight:700;color:'+(t.tipo==='receita'?'var(--green)':'var(--red)')+'">'+fmt(t.valor)+'</td><td style="white-space:nowrap"><button class="eb" onclick="editarTrans(\''+t.id+'\')">✏️</button><button class="ib" onclick="delTrans(\''+t.id+'\')">✕</button></td></tr>';}).join('')+'</table>';
+    list.map(function(t){
+      var nfBtn=t.nfLink?'<a href="'+t.nfLink+'" target="_blank" title="Abrir NF" style="font-size:14px;text-decoration:none;margin-right:4px">📎</a>':'';
+      return '<tr><td style="color:var(--text3);font-size:12px">'+fd(t.data)+'</td><td style="font-weight:500">'+t.desc+(t.categoria?'<br><span style="font-size:11px;color:var(--text3)">'+t.categoria+'</span>':'')+'</td><td><span class="bx '+t.tipo+'">'+t.tipo+'</span></td><td style="text-align:right;font-weight:700;color:'+(t.tipo==='receita'?'var(--green)':'var(--red)')+'">'+fmt(t.valor)+'</td><td style="white-space:nowrap">'+nfBtn+'<button class="eb" onclick="editarTrans(\''+t.id+'\')">✏️</button><button class="ib" onclick="delTrans(\''+t.id+'\')">✕</button></td></tr>';}).join('')+'</table>';
 }
 function renderFinRes(){
   var r=D.tr.filter(function(t){return t.tipo==='receita';}).reduce(function(a,t){return a+t.valor;},0);
