@@ -338,6 +338,7 @@ function stL(l){if(l.quitado)return l.tipo==='a-pagar'?'pago':'recebido';return 
 function gv(id){var el=document.getElementById(id);return el?el.value:'';}
 function fecharModal(id){document.getElementById(id).classList.remove('on');}
 function isDark(){return THEME==='dark';}
+function hojeStr(){return new Date().toISOString().split('T')[0];}
 
 function cc(){return{grid:isDark()?'rgba(255,255,255,.06)':'rgba(0,0,0,.06)',green:'#22d3a0',greenBg:isDark()?'rgba(34,211,160,.15)':'rgba(34,211,160,.2)',red:'#f06292',redBg:isDark()?'rgba(240,98,146,.15)':'rgba(240,98,146,.2)',accent:'#6c63ff',accentBg:isDark()?'rgba(108,99,255,.15)':'rgba(108,99,255,.2)',text:isDark()?'#6b7199':'#9aa0c4'};}
 
@@ -392,7 +393,7 @@ function renderDash(){
   if(!D.ta.length){el2.closest('.cw').innerHTML='<div class="empty">Sem tarefas.</div>';}
   else{var c2=cc();charts['ch-dnt']=new Chart(el2.getContext('2d'),{type:'doughnut',data:{labels:['Aberto','Fazendo','Feito'],datasets:[{data:[ab2,fa,fe],backgroundColor:[isDark()?'rgba(107,113,153,.4)':'rgba(107,113,153,.2)',c2.accentBg,c2.greenBg],borderColor:['#6b7199',c2.accent,c2.green],borderWidth:2,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:isDark()?'#1a1d27':'#fff',borderColor:isDark()?'#2e3248':'#e2e5f5',borderWidth:1,padding:10}},cutout:'68%',animation:{animateRotate:true,duration:800}}});
   document.getElementById('dleg').innerHTML='<div class="li"><div class="ld" style="background:#6b7199"></div>Aberto ('+ab2+')</div><div class="li"><div class="ld" style="background:'+c2.accent+'"></div>Fazendo ('+fa+')</div><div class="li"><div class="ld" style="background:'+c2.green+'"></div>Feito ('+fe+')</div>';}
-  // Vencimentos
+  // Vencimentos (inclui pendentes mesmo vencidos)
   var vl=D.la.filter(function(x){return !x.quitado;}).sort(function(a,b){return a.vencimento.localeCompare(b.vencimento);}).slice(0,5);
   if(!vl.length){document.getElementById('dash-venc').innerHTML='<div class="empty">Nenhum vencimento pendente. ✅</div>';return;}
   document.getElementById('dash-venc').innerHTML=vl.map(function(x){
@@ -519,7 +520,12 @@ function renderLancamentos(){
     if(fs==='vencido'&&st!=='vencido')return false;
     return true;
   });
-  list.sort(function(a,b){return ord==='asc'?(a.vencimento||'').localeCompare(b.vencimento||''):(b.vencimento||'').localeCompare(a.vencimento||'');});
+  // Pendentes (não quitados) sempre no início, em ordem cronológica; quitados (pagos/recebidos) sempre no final, também em ordem cronológica.
+  list.sort(function(a,b){
+    var ga=a.quitado?1:0, gb=b.quitado?1:0;
+    if(ga!==gb)return ga-gb;
+    return ord==='asc'?(a.vencimento||'').localeCompare(b.vencimento||''):(b.vencimento||'').localeCompare(a.vencimento||'');
+  });
   if(!list.length){document.getElementById('lanc-body').innerHTML='<div class="empty">Nenhum lançamento.</div>';}
   else{document.getElementById('lanc-body').innerHTML='<table><tr><th>Vencimento</th><th>Descrição</th><th>Tipo</th><th style="text-align:right">Valor</th><th>Status</th><th></th></tr>'+list.map(function(l){var st=stL(l),d=dv(l.vencimento),al=(!l.quitado&&d>=0&&d<=3)?'<span style="font-size:10px;color:var(--amber);font-weight:600"> ⚠'+d+'d</span>':'',va=(!l.quitado&&d<0)?'<span style="font-size:10px;color:var(--red);font-weight:600"> ●'+Math.abs(d)+'d</span>':'',pb=l.recorrente&&l.parcelaAtual?'<span class="pb" style="margin-left:4px">'+l.parcelaAtual+'/'+(l.totalParcelas||'?')+'</span>':'';return '<tr><td style="font-size:12px;color:var(--text2)">'+fd(l.vencimento)+al+va+'</td><td style="font-weight:500">'+l.desc+pb+(l.nota?'<br><span style="font-size:11px;color:var(--text3)">'+l.nota+'</span>':'')+'</td><td><span class="bx '+l.tipo+'">'+(l.tipo==='a-pagar'?'A Pagar':'A Receber')+'</span></td><td style="text-align:right;font-weight:700;color:'+(l.tipo==='a-receber'?'var(--green)':'var(--red)')+'">'+fmt(l.valor)+'</td><td><span class="bx '+st+'">'+st+'</span></td><td style="white-space:nowrap">'+(!l.quitado?'<button class="btn sm" onclick="quitLanc(\''+l.id+'\')" style="color:var(--green);border-color:var(--green);margin-right:2px">✓</button>':'')+'<button class="eb" onclick="editarLanc(\''+l.id+'\')">✏️</button><button class="ib" onclick="delLanc(\''+l.id+'\')">✕</button></td></tr>';}).join('')+'</table>';}
   var aR=D.la.filter(function(l){return l.tipo==='a-receber'&&!l.quitado;}).reduce(function(a,l){return a+l.valor;},0);
@@ -539,7 +545,7 @@ function calcPer(){
   return{i:s(i),f:s(f),pi:s(pi),pf:s(pf)};
 }
 function geraRel(){
-  var per=calcPer(),i=per.i,f=per.f,pi=per.pi,pf=per.pf;
+  var per=calcPer(),i=per.i,f=per.f,pi=per.pi,pf=per.pf,hj0=hojeStr();
   var tr=D.tr.filter(function(t){return t.data>=i&&t.data<=f;});
   var rec=tr.filter(function(t){return t.tipo==='receita';}).reduce(function(a,t){return a+t.valor;},0);
   var des=tr.filter(function(t){return t.tipo==='despesa';}).reduce(function(a,t){return a+t.valor;},0);
@@ -547,7 +553,10 @@ function geraRel(){
   var sT=D.tr.filter(function(t){return t.tipo==='receita';}).reduce(function(a,t){return a+t.valor;},0)-D.tr.filter(function(t){return t.tipo==='despesa';}).reduce(function(a,t){return a+t.valor;},0);
   var aR=D.la.filter(function(l){return l.tipo==='a-receber'&&!l.quitado;}).reduce(function(a,l){return a+l.valor;},0);
   var aP=D.la.filter(function(l){return l.tipo==='a-pagar'&&!l.quitado;}).reduce(function(a,l){return a+l.valor;},0);
-  var pL=D.la.filter(function(l){return !l.quitado&&l.vencimento>=pi&&l.vencimento<=pf;});
+  // Pendentes com vencimento no próximo período + pendentes já vencidos (mesmo fora do período), pois ainda representam obrigação em aberto
+  var pPeriodo=D.la.filter(function(l){return !l.quitado&&l.vencimento>=pi&&l.vencimento<=pf;});
+  var pVencidos=D.la.filter(function(l){return !l.quitado&&l.vencimento<hj0;});
+  var pL=pVencidos.concat(pPeriodo.filter(function(l){return !pVencidos.some(function(v){return v.id===l.id;});}));
   pL.sort(function(a,b){return (a.vencimento||'').localeCompare(b.vencimento||'');});
   var pR=pL.filter(function(l){return l.tipo==='a-receber';}).reduce(function(a,l){return a+l.valor;},0);
   var pP=pL.filter(function(l){return l.tipo==='a-pagar';}).reduce(function(a,l){return a+l.valor;},0);
@@ -564,11 +573,11 @@ function geraRel(){
     '<div class="rkc"><div class="rkl">A Receber</div><div class="rkv" style="color:var(--blue)">'+fmt(aR)+'</div></div>'+
     '<div class="rkc"><div class="rkl">A Pagar</div><div class="rkv" style="color:var(--amber)">'+fmt(aP)+'</div></div>'+
     '</div><div class="rcw"><canvas id="rel-ch"></canvas></div></div>'+
-    '<div class="rs"><div class="rst">Previsão — Próximo Período ('+fd(pi)+' a '+fd(pf)+')</div>'+
-    (pL.length?pL.map(function(l){return '<div class="rpi"><div><div style="font-weight:600;font-size:13px">'+l.desc+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Vencimento: '+fd(l.vencimento)+'</div></div><div style="text-align:right"><div style="font-weight:700;color:'+(l.tipo==='a-receber'?'var(--green)':'var(--red)')+'">'+fmt(l.valor)+'</div></div></div>';}).join(''):'<div class="empty">Nenhum lançamento previsto</div>')+
+    '<div class="rs"><div class="rst">Previsão — Próximo Período ('+fd(pi)+' a '+fd(pf)+')'+(pVencidos.length?' + pendências vencidas':'')+'</div>'+
+    (pL.length?pL.map(function(l){var vencidoTag=l.vencimento<hj0?' <span style="color:var(--red);font-weight:700;font-size:10px">● VENCIDO</span>':'';return '<div class="rpi"><div><div style="font-weight:600;font-size:13px">'+l.desc+vencidoTag+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Vencimento: '+fd(l.vencimento)+'</div></div><div style="text-align:right"><div style="font-weight:700;color:'+(l.tipo==='a-receber'?'var(--green)':'var(--red)')+'">'+fmt(l.valor)+'</div></div></div>';}).join(''):'<div class="empty">Nenhum lançamento previsto</div>')+
     '<div style="margin-top:14px;padding:14px 16px;border-radius:var(--radius-sm);background:'+(nA?'var(--red-bg)':'var(--green-bg)')+';border:1px solid '+(nA?'rgba(240,98,146,.3)':'rgba(34,211,160,.3)')+'">'+
     '<div style="font-size:12px;font-weight:700;color:'+(nA?'var(--red)':'var(--green)')+';margin-bottom:4px">'+(nA?'⚠️ Necessidade de Aporte':'✅ Fluxo positivo previsto')+'</div>'+
-    '<div style="font-size:13px;color:var(--text2)">'+(nA?'Necessidade de aporte de <strong style="color:var(--red)">'+fmt(vA)+'</strong> para o próximo período.':'Saldo projetado positivo de <strong style="color:var(--green)">'+fmt(sT+pR-pP)+'</strong>.')+'</div></div></div>'+
+    '<div style="font-size:13px;color:var(--text2)">'+(nA?'Necessidade de aporte de <strong style="color:var(--red)">'+fmt(vA)+'</strong> considerando o próximo período'+(pVencidos.length?' e pendências já vencidas':'')+'.':'Saldo projetado positivo de <strong style="color:var(--green)">'+fmt(sT+pR-pP)+'</strong>.')+'</div></div></div>'+
     '<div class="rs"><div class="rst">Movimentações ('+tr.length+' registros)</div>'+
     '<table class="rt"><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th style="text-align:center">Tipo</th><th style="text-align:right">Valor</th></tr>'+
     (tr.length?tr.map(function(t){return '<tr><td>'+fd(t.data)+'</td><td>'+t.desc+'</td><td style="color:var(--text3)">'+(t.categoria||'—')+'</td><td style="text-align:center"><span class="bx '+(t.tipo==='receita'?'receita':'despesa')+'">'+(t.tipo==='receita'?'Receita':'Despesa')+'</span></td><td style="text-align:right;font-weight:700;color:'+(t.tipo==='receita'?'var(--green)':'var(--red)')+'">'+fmt(t.valor)+'</td></tr>';}).join(''):'<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px">Nenhuma movimentação</td></tr>')+
