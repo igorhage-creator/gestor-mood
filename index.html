@@ -128,7 +128,6 @@ textarea{resize:vertical;min-height:56px}select option{background:var(--bg2)}
 </style>
 </head>
 <body>
-
 <div id="login-screen">
   <div class="login-box">
     <div class="login-logo">🟣</div>
@@ -140,7 +139,6 @@ textarea{resize:vertical;min-height:56px}select option{background:var(--bg2)}
     <div class="login-error" id="lerr"></div>
   </div>
 </div>
-
 <!-- MODAL TRANSAÇÃO -->
 <div class="modal-bg" id="modal-trans">
   <div class="modal">
@@ -153,7 +151,6 @@ textarea{resize:vertical;min-height:56px}select option{background:var(--bg2)}
     <div class="modal-btns"><button class="btn" onclick="fecharModal('modal-trans')">Cancelar</button><button class="btn p" onclick="salvarTrans()">Salvar</button></div>
   </div>
 </div>
-
 <!-- MODAL LANÇAMENTO -->
 <div class="modal-bg" id="modal-lanc">
   <div class="modal">
@@ -177,7 +174,6 @@ textarea{resize:vertical;min-height:56px}select option{background:var(--bg2)}
     <div class="modal-btns"><button class="btn" onclick="fecharModal('modal-lanc')">Cancelar</button><button class="btn p" onclick="salvarLanc()">Salvar</button></div>
   </div>
 </div>
-
 <div id="app">
   <header>
     <div class="logo">🟣 Mood Mentoria</div>
@@ -194,7 +190,6 @@ textarea{resize:vertical;min-height:56px}select option{background:var(--bg2)}
     </div>
   </div>
   <div class="wrap">
-
     <div id="p-dash" class="panel on">
       <div id="dash-m" class="mg"></div>
       <div class="dg">
@@ -203,7 +198,6 @@ textarea{resize:vertical;min-height:56px}select option{background:var(--bg2)}
       </div>
       <div class="card" style="margin-top:14px"><div class="ct">⏰ Próximos vencimentos</div><div id="dash-venc"></div></div>
     </div>
-
     <div id="p-fin" class="panel">
       <div id="fin-m" class="mg"></div>
       <div class="card">
@@ -223,7 +217,6 @@ textarea{resize:vertical;min-height:56px}select option{background:var(--bg2)}
       </div>
       <div class="card"><div class="ct">📊 Resumo</div><div id="fin-res"></div></div>
     </div>
-
     <div id="p-tasks" class="panel">
       <div class="card">
         <div class="ct">➕ Nova tarefa</div>
@@ -242,7 +235,6 @@ textarea{resize:vertical;min-height:56px}select option{background:var(--bg2)}
         <div id="tasks-body"></div>
       </div>
     </div>
-
     <div id="p-lanc" class="panel">
       <div class="card">
         <div class="ct">➕ Novo lançamento</div>
@@ -269,7 +261,6 @@ textarea{resize:vertical;min-height:56px}select option{background:var(--bg2)}
       </div>
       <div class="card"><div class="ct">📊 Resumo lançamentos</div><div id="lanc-res"></div></div>
     </div>
-
     <div id="p-rel" class="panel">
       <div class="card">
         <div class="ct">📄 Relatório — Mood Mentoria</div>
@@ -292,7 +283,6 @@ textarea{resize:vertical;min-height:56px}select option{background:var(--bg2)}
   </div>
 </div>
 <div class="toast" id="tst"></div>
-
 <script>
 // Firebase — Mood Mentoria
 firebase.initializeApp({
@@ -306,16 +296,13 @@ firebase.initializeApp({
 var db=firebase.firestore(), auth=firebase.auth();
 var D={tr:[],ta:[],la:[]}, charts={}, TV='lista', RP='sem', relCh=null;
 var THEME=localStorage.getItem('theme-mood')||'dark';
-
 function applyTheme(t){THEME=t;document.documentElement.setAttribute('data-theme',t);document.getElementById('theme-btn').textContent=t==='dark'?'🌙':'☀️';localStorage.setItem('theme-mood',t);Chart.defaults.color=t==='dark'?'#6b7199':'#9aa0c4';}
 function toggleTheme(){applyTheme(THEME==='dark'?'light':'dark');renderAll();}
 applyTheme(THEME);
-
 auth.onAuthStateChanged(function(u){
   if(u){document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';loadAll();}
   else{document.getElementById('login-screen').style.display='flex';document.getElementById('app').style.display='none';}
 });
-
 function login(){
   var e=document.getElementById('lemail').value.trim(),s=document.getElementById('lsenha').value;
   var btn=document.getElementById('lbtn'),err=document.getElementById('lerr');
@@ -327,7 +314,6 @@ function login(){
   });
 }
 function logout(){auth.signOut();D={tr:[],ta:[],la:[]};}
-
 function toast(msg,dur){dur=dur||2800;var t=document.getElementById('tst');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},dur);}
 function setSy(msg,c){var e=document.getElementById('sync');e.textContent=msg;e.style.color=c||'var(--text3)';}
 function fmt(v){return 'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
@@ -339,16 +325,13 @@ function gv(id){var el=document.getElementById(id);return el?el.value:'';}
 function fecharModal(id){document.getElementById(id).classList.remove('on');}
 function isDark(){return THEME==='dark';}
 function hojeStr(){return new Date().toISOString().split('T')[0];}
-
 function cc(){return{grid:isDark()?'rgba(255,255,255,.06)':'rgba(0,0,0,.06)',green:'#22d3a0',greenBg:isDark()?'rgba(34,211,160,.15)':'rgba(34,211,160,.2)',red:'#f06292',redBg:isDark()?'rgba(240,98,146,.15)':'rgba(240,98,146,.2)',accent:'#6c63ff',accentBg:isDark()?'rgba(108,99,255,.15)':'rgba(108,99,255,.2)',text:isDark()?'#6b7199':'#9aa0c4'};}
-
 function proxV(d,f){var dt=new Date(d+'T12:00');f==='mensal'?dt.setMonth(dt.getMonth()+1):dt.setFullYear(dt.getFullYear()+1);return dt.toISOString().split('T')[0];}
 function totP(ini,fim,f){if(!ini||!fim)return null;var d=new Date(ini+'T12:00'),ff=new Date(fim+'T12:00'),c=1;while(true){f==='mensal'?d.setMonth(d.getMonth()+1):d.setFullYear(d.getFullYear()+1);if(d>ff)break;c++;}return c;}
 function togRec(){document.getElementById('rec-box').classList.toggle('on',document.getElementById('l-rec').checked);}
 function calcParc(){var i=gv('l-venc'),f=gv('l-dfim'),fr=gv('l-freq');if(i&&f){var t=totP(i,f,fr);document.getElementById('l-tp').value=t?t+' parcelas':'';}}
 function togRecEdit(){document.getElementById('el-rec-box').classList.toggle('on',document.getElementById('el-rec').checked);}
 function calcParcEdit(){var i=gv('el-venc'),f=gv('el-dfim'),fr=gv('el-freq');if(i&&f){var t=totP(i,f,fr);document.getElementById('el-tp').value=t?t+' parcelas':'';}}
-
 function loadAll(){
   setSy('sincronizando...');
   Promise.all([
@@ -357,7 +340,6 @@ function loadAll(){
     db.collection('lancamentos').get().then(function(s){D.la=s.docs.map(function(d){return Object.assign({id:d.id},d.data());});})
   ]).then(function(){setSy('● online','var(--green)');renderAll();}).catch(function(){setSy('● offline','var(--red)');});
 }
-
 function tab(id){
   document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('on');});
   document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on');});
@@ -366,7 +348,6 @@ function tab(id){
   document.querySelectorAll('.tab')[ids.indexOf(id)].classList.add('on');
   if(id==='dash')renderDash();
 }
-
 function renderDash(){
   var rec=D.tr.filter(function(t){return t.tipo==='receita';}).reduce(function(a,t){return a+t.valor;},0);
   var des=D.tr.filter(function(t){return t.tipo==='despesa';}).reduce(function(a,t){return a+t.valor;},0);
@@ -403,7 +384,6 @@ function renderDash(){
     return '<div class="va '+(vc?'vv':'')+'"><span style="font-size:18px">'+(x.tipo==='a-pagar'?'🔴':'🟢')+'</span><div style="flex:1"><div style="font-weight:600;font-size:14px">'+x.desc+pb+'</div><div style="margin-top:3px;display:flex;gap:8px;align-items:center">'+info+'<span style="color:var(--text3);font-size:11px">'+fd(x.vencimento)+'</span></div></div><div style="text-align:right"><div style="font-weight:700;font-size:15px;color:'+(x.tipo==='a-pagar'?'var(--red)':'var(--green)')+'">'+fmt(x.valor)+'</div><span class="bx '+x.tipo+'" style="font-size:10px">'+(x.tipo==='a-pagar'?'A Pagar':'A Receber')+'</span></div></div>';
   }).join('');
 }
-
 // FINANCEIRO
 function addTrans(){
   var desc=document.getElementById('f-desc').value.trim(),val=parseFloat(document.getElementById('f-val').value);
@@ -444,7 +424,6 @@ function renderFinRes(){
   var d=D.tr.filter(function(t){return t.tipo==='despesa';}).reduce(function(a,t){return a+t.valor;},0);
   document.getElementById('fin-res').innerHTML='<div class="sr"><span style="color:var(--text2)">Receitas</span><span style="color:var(--green);font-weight:600">'+fmt(r)+'</span></div><div class="sr"><span style="color:var(--text2)">Despesas</span><span style="color:var(--red);font-weight:600">'+fmt(d)+'</span></div><div class="sr"><span style="color:var(--text2)">Saldo</span><span style="color:'+(r-d>=0?'var(--green)':'var(--red)')+';font-weight:700">'+fmt(r-d)+'</span></div>';
 }
-
 // TAREFAS
 function setTV(v){TV=v;document.getElementById('vbl').classList.toggle('on',v==='lista');document.getElementById('vbk').classList.toggle('on',v==='kanban');renderTasks();}
 function addTask(){
@@ -469,7 +448,6 @@ function renderTasks(){
     b.innerHTML='<div class="tbl-wrap"><table><tr><th>Tarefa</th><th>Prioridade</th><th>Prazo</th><th>Status</th><th></th></tr>'+l.map(function(t){return '<tr><td><div style="font-weight:500">'+t.nome+'</div>'+(t.nota?'<div style="font-size:11px;color:var(--text3);margin-top:2px">'+t.nota+'</div>':'')+'</td><td><span class="bx '+t.prioridade+'">'+t.prioridade+'</span></td><td style="font-size:12px;color:var(--text3)">'+fd(t.prazo)+'</td><td><select onchange="updTask(\''+t.id+'\',this.value)" style="font-size:12px;padding:5px 8px;width:auto"><option value="aberto"'+(t.status==='aberto'?' selected':'')+'>Aberto</option><option value="fazendo"'+(t.status==='fazendo'?' selected':'')+'>Fazendo</option><option value="feito"'+(t.status==='feito'?' selected':'')+'>Feito</option></select></td><td><button class="ib" onclick="delTask(\''+t.id+'\')">✕</button></td></tr>';}).join('')+'</table></div>';
   }
 }
-
 // LANÇAMENTOS
 function addLanc(){
   var desc=document.getElementById('l-desc').value.trim(),val=parseFloat(document.getElementById('l-val').value),vc=document.getElementById('l-venc').value;
@@ -533,7 +511,6 @@ function renderLancamentos(){
   var vn=D.la.filter(function(l){return !l.quitado&&dv(l.vencimento)<0;}).length;
   document.getElementById('lanc-res').innerHTML='<div class="sr"><span style="color:var(--text2)">Total A Receber</span><span style="color:var(--green);font-weight:700">'+fmt(aR)+'</span></div><div class="sr"><span style="color:var(--text2)">Total A Pagar</span><span style="color:var(--red);font-weight:700">'+fmt(aP)+'</span></div><div class="sr"><span style="color:var(--text2)">Saldo futuro</span><span style="color:'+(aR-aP>=0?'var(--green)':'var(--red)')+';font-weight:700">'+fmt(aR-aP)+'</span></div><div class="sr"><span style="color:var(--text2)">Vencidos não quitados</span><span style="color:'+(vn>0?'var(--red)':'var(--text3)')+';font-weight:700">'+vn+'</span></div>';
 }
-
 // RELATÓRIO
 function setPer(p){RP=p;['sem','men','per'].forEach(function(x){document.getElementById('rb-'+x).classList.toggle('on',x===p);});document.getElementById('rel-dd').classList.toggle('on',p==='per');}
 function calcPer(){
@@ -547,6 +524,7 @@ function calcPer(){
 function geraRel(){
   var per=calcPer(),i=per.i,f=per.f,pi=per.pi,pf=per.pf,hj0=hojeStr();
   var tr=D.tr.filter(function(t){return t.data>=i&&t.data<=f;});
+  tr.sort(function(a,b){return (a.data||'').localeCompare(b.data||'');}); // ordena pagamentos/recebimentos por data (cronologico) para conferencia contabil
   var rec=tr.filter(function(t){return t.tipo==='receita';}).reduce(function(a,t){return a+t.valor;},0);
   var des=tr.filter(function(t){return t.tipo==='despesa';}).reduce(function(a,t){return a+t.valor;},0);
   var sld=rec-des;
@@ -588,7 +566,6 @@ function geraRel(){
 }
 function impRel(){if(document.getElementById('rel-wrap').style.display==='none'){alert('Gere o relatório primeiro.');return;}window.print();}
 function renderAll(){renderFin();renderTasks();renderLancamentos();renderDash();}
-
 document.getElementById('f-data').value=new Date().toISOString().split('T')[0];
 document.getElementById('t-prazo').value=new Date().toISOString().split('T')[0];
 document.getElementById('l-venc').value=new Date().toISOString().split('T')[0];
