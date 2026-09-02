@@ -633,16 +633,31 @@ function geraRel(){
   var colspanVazio=temNatCol?6:5;
   var colspanTotal=temNatCol?4:3;
 
+  // Previsão do próximo período, também filtrada pelo escopo escolhido (ex: só despesas fixas)
+  var pLScope;
+  if(escopo==='completo')pLScope=pL;
+  else if(escopo==='receitas')pLScope=pL.filter(function(l){return l.tipo==='a-receber';});
+  else if(escopo==='despesas')pLScope=pL.filter(function(l){return l.tipo==='a-pagar';});
+  else if(escopo==='despesas-fixas')pLScope=pL.filter(function(l){return l.tipo==='a-pagar'&&l.natureza==='fixa';});
+  else pLScope=pL.filter(function(l){return l.tipo==='a-pagar'&&l.natureza==='variavel';});
+  var pVencidosScopeQtd=pLScope.filter(function(l){return l.vencimento<hj0;}).length;
+  var totalPrevScope=pLScope.reduce(function(a,l){return a+l.valor;},0);
+
   document.getElementById('rel-out').innerHTML=
     '<div class="rh"><div class="rl">Mood Mentoria<span>Relatório Financeiro — '+lb+(escopo!=='completo'?' · '+escopoLabels[escopo]:'')+'</span></div><div class="rm"><strong>'+fd(i)+' a '+fd(f)+'</strong>Gerado em '+hj+'<br>Confidencial</div></div>'+
     '<div class="rs"><div class="rst">Resumo Executivo</div>'+rkHtml+'<div class="rcw"><canvas id="rel-ch"></canvas></div></div>'+
-    (escopo==='completo'?(
-    '<div class="rs"><div class="rst">Previsão — Próximo Período ('+fd(pi)+' a '+fd(pf)+')'+(pVencidos.length?' + pendências vencidas':'')+'</div>'+
-    (pL.length?pL.map(function(l){var vencidoTag=l.vencimento<hj0?' <span style="color:var(--red);font-weight:700;font-size:10px">● VENCIDO</span>':'';var natTag=(l.tipo==='a-pagar'&&l.natureza)?' <span class="bx '+l.natureza+'" style="font-size:10px;margin-left:4px">'+(l.natureza==='fixa'?'Fixa':'Variável')+'</span>':'';return '<div class="rpi"><div><div style="font-weight:600;font-size:13px">'+l.desc+vencidoTag+natTag+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Vencimento: '+fd(l.vencimento)+'</div></div><div style="text-align:right"><div style="font-weight:700;color:'+(l.tipo==='a-receber'?'var(--green)':'var(--red)')+'">'+fmt(l.valor)+'</div></div></div>';}).join(''):'<div class="empty">Nenhum lançamento previsto</div>')+
-    '<div style="margin-top:14px;padding:14px 16px;border-radius:var(--radius-sm);background:'+(nA?'var(--red-bg)':'var(--green-bg)')+';border:1px solid '+(nA?'rgba(240,98,146,.3)':'rgba(34,211,160,.3)')+'">'+
+    '<div class="rs"><div class="rst">Previsão — Próximo Período ('+fd(pi)+' a '+fd(pf)+')'+(pVencidosScopeQtd?' + pendências vencidas':'')+'</div>'+
+    (pLScope.length?pLScope.map(function(l){var vencidoTag=l.vencimento<hj0?' <span style="color:var(--red);font-weight:700;font-size:10px">● VENCIDO</span>':'';var natTag=(l.tipo==='a-pagar'&&l.natureza)?' <span class="bx '+l.natureza+'" style="font-size:10px;margin-left:4px">'+(l.natureza==='fixa'?'Fixa':'Variável')+'</span>':'';return '<div class="rpi"><div><div style="font-weight:600;font-size:13px">'+l.desc+vencidoTag+natTag+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Vencimento: '+fd(l.vencimento)+'</div></div><div style="text-align:right"><div style="font-weight:700;color:'+(l.tipo==='a-receber'?'var(--green)':'var(--red)')+'">'+fmt(l.valor)+'</div></div></div>';}).join(''):'<div class="empty">Nenhum lançamento previsto para este escopo.</div>')+
+    (escopo==='completo'?
+    ('<div style="margin-top:14px;padding:14px 16px;border-radius:var(--radius-sm);background:'+(nA?'var(--red-bg)':'var(--green-bg)')+';border:1px solid '+(nA?'rgba(240,98,146,.3)':'rgba(34,211,160,.3)')+'">'+
     '<div style="font-size:12px;font-weight:700;color:'+(nA?'var(--red)':'var(--green)')+';margin-bottom:4px">'+(nA?'⚠️ Necessidade de Aporte':'✅ Fluxo positivo previsto')+'</div>'+
-    '<div style="font-size:13px;color:var(--text2)">'+(nA?'Necessidade de aporte de <strong style="color:var(--red)">'+fmt(vA)+'</strong> considerando o próximo período'+(pVencidos.length?' e pendências já vencidas':'')+'.':'Saldo projetado positivo de <strong style="color:var(--green)">'+fmt(sT+pR-pP)+'</strong>.')+'</div></div></div>'
-    ):'')+
+    '<div style="font-size:13px;color:var(--text2)">'+(nA?'Necessidade de aporte de <strong style="color:var(--red)">'+fmt(vA)+'</strong> considerando o próximo período'+(pVencidosScopeQtd?' e pendências já vencidas':'')+'.':'Saldo projetado positivo de <strong style="color:var(--green)">'+fmt(sT+pR-pP)+'</strong>.')+'</div></div>')
+    :
+    ('<div style="margin-top:14px;padding:14px 16px;border-radius:var(--radius-sm);background:var(--bg3)">'+
+    '<div style="font-size:12px;font-weight:700;color:var(--text3);margin-bottom:4px">📅 Total previsto — '+escopoLabels[escopo]+'</div>'+
+    '<div style="font-size:16px;font-weight:700;color:'+corEsc+'">'+fmt(totalPrevScope)+'</div></div>')
+    )+
+    '</div>'+
     '<div class="rs"><div class="rst">Movimentações ('+trF.length+' registros)</div>'+
     '<table class="rt"><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th style="text-align:center">Tipo</th>'+(temNatCol?'<th style="text-align:center">Natureza</th>':'')+'<th style="text-align:right">Valor</th></tr>'+
     (trF.length?trF.map(function(t){var natCol=temNatCol?'<td style="text-align:center">'+(t.natureza?'<span class="bx '+t.natureza+'">'+(t.natureza==='fixa'?'Fixa':'Variável')+'</span>':'—')+'</td>':'';return '<tr><td>'+fd(t.data)+'</td><td>'+t.desc+'</td><td style="color:var(--text3)">'+(t.categoria||'—')+'</td><td style="text-align:center"><span class="bx '+(t.tipo==='receita'?'receita':'despesa')+'">'+(t.tipo==='receita'?'Receita':'Despesa')+'</span></td>'+natCol+'<td style="text-align:right;font-weight:700;color:'+(t.tipo==='receita'?'var(--green)':'var(--red)')+'">'+fmt(t.valor)+'</td></tr>';}).join(''):'<tr><td colspan="'+colspanVazio+'" style="text-align:center;color:var(--text3);padding:20px">Nenhuma movimentação</td></tr>')+
